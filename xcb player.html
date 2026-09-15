@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xonnie Carey Baker Player</title>
+<style>
+  body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .player-container {
+    background: linear-gradient(180deg, #4a4a4a 0%, #2b2b2b 100%);
+    border: 2px solid #555;
+    border-radius: 8px;
+    padding: 20px;
+    width: 320px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.2);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-size: 15px;
+    margin: 0;
+    letter-spacing: 1px;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000;
+  }
+
+  .header h2 {
+    font-size: 11px;
+    color: #aaa;
+    margin: 5px 0 0 0;
+    letter-spacing: 0.5px;
+  }
+
+  .lcd-screen {
+    background-color: #0a1105;
+    border: 3px inset #444;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-family: 'Courier New', Courier, monospace;
+    color: #4af52c;
+    text-shadow: 0 0 5px rgba(74, 245, 44, 0.4);
+  }
+
+  .file-info {
+    font-size: 13px;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+
+  .file-name {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: bold;
+  }
+
+  .time-display {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .playback-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  button {
+    background: linear-gradient(180deg, #666 0%, #333 100%);
+    border: 1px solid #222;
+    border-radius: 4px;
+    color: #e0e0e0;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 11px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 3px 4px rgba(0,0,0,0.3);
+    transition: all 0.1s;
+  }
+
+  button:active {
+    background: #333;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.6);
+    transform: translateY(2px);
+  }
+
+  .volume-section {
+    text-align: center;
+    margin-bottom: 20px;
+    background: #222;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px inset #444;
+  }
+
+  .volume-section label {
+    display: block;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: #aaa;
+    text-transform: uppercase;
+  }
+
+  input[type=range] {
+    width: 90%;
+    accent-color: #4af52c;
+    cursor: pointer;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+  }
+
+  .status-bar {
+    font-size: 11px;
+    color: #888;
+    border-top: 1px solid #444;
+    padding-top: 10px;
+    font-style: italic;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<div class="player-container">
+  <div class="header">
+    <h1>XONNIE CAREY BAKER PLAYER</h1>
+    <h2>♪ MP3 PLAYER FOR HUMANS ♪</h2>
+  </div>
+  
+  <div class="lcd-screen">
+    <div class="file-info">
+      Current file:<br>
+      <span class="file-name" id="fileName">No file loaded...</span>
+    </div>
+    <div class="time-display" id="timeDisplay">
+      00:00 / 00:00
+    </div>
+  </div>
+
+  <div class="playback-controls">
+    <button id="btnPlay">Play</button>
+    <button id="btnPause">Pause</button>
+    <button id="btnStop">Stop</button>
+  </div>
+
+  <div class="volume-section">
+    <label>Volume</label>
+    <input type="range" id="volumeSlider" min="0" max="100" value="50">
+  </div>
+
+  <div class="action-buttons">
+    <button id="btnOpen">Open MP3</button>
+    <button id="btnLoop">Loop: Off</button>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    Status: waiting for audio file...
+  </div>
+</div>
+
+<!-- Elemen Audio Tersembunyi (Mesinnya) -->
+<audio id="audioPlayer"></audio>
+<input type="file" id="fileInput" accept="audio/*" style="display: none;">
+
+<script>
+  // Mengambil elemen-elemen dari HTML
+  const audio = document.getElementById('audioPlayer');
+  const fileInput = document.getElementById('fileInput');
+  const fileNameDisplay = document.getElementById('fileName');
+  const timeDisplay = document.getElementById('timeDisplay');
+  const statusBar = document.getElementById('statusBar');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const btnLoop = document.getElementById('btnLoop');
+
+  // Format waktu dari detik menjadi MM:SS
+  function formatTime(seconds) {
+    if (isNaN(seconds)) return "00:00";
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  // Tombol Open MP3 (Membuka jendela pencarian file)
+  document.getElementById('btnOpen').addEventListener('click', () => {
+    fileInput.click();
+  });
+
+  // Saat file dipilih
+  fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const fileUrl = URL.createObjectURL(file);
+      audio.src = fileUrl;
+      fileNameDisplay.textContent = file.name;
+      statusBar.textContent = "Status: File loaded. Ready to play.";
+      audio.play(); // Otomatis mainkan saat file dipilih
+    }
+  });
+
+  // Tombol Play, Pause, Stop
+  document.getElementById('btnPlay').addEventListener('click', () => {
+    if (audio.src) {
+      audio.play();
+      statusBar.textContent = "Status: Playing...";
+    }
+  });
+
+  document.getElementById('btnPause').addEventListener('click', () => {
+    audio.pause();
+    statusBar.textContent = "Status: Paused.";
+  });
+
+  document.getElementById('btnStop').addEventListener('click', () => {
+    audio.pause();
+    audio.currentTime = 0; // Kembalikan ke detik ke-0
+    statusBar.textContent = "Status: Stopped.";
+  });
+
+  // Slider Volume
+  audio.volume = volumeSlider.value / 100; // Set volume awal sesuai slider
+  volumeSlider.addEventListener('input', (e) => {
+    audio.volume = e.target.value / 100;
+  });
+
+  // Tombol Loop
+  btnLoop.addEventListener('click', () => {
+    audio.loop = !audio.loop;
+    btnLoop.textContent = audio.loop ? "Loop: On" : "Loop: Off";
+  });
+
+  // Update tampilan waktu saat lagu berjalan
+  audio.addEventListener('timeupdate', () => {
+    const current = formatTime(audio.currentTime);
+    const duration = formatTime(audio.duration);
+    timeDisplay.textContent = `${current} / ${duration}`;
+  });
+
+  // Saat lagu selesai
+  audio.addEventListener('ended', () => {
+    if (!audio.loop) {
+      statusBar.textContent = "Status: Playback finished.";
+    }
+  });
+</script>
+
+</body>
+</html>
